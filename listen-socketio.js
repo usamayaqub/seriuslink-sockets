@@ -7,6 +7,7 @@ const socket = io("https://seriuslink-sockets-production.up.railway.app", {
 
 console.log("Connecting to live Railway Socket.IO server: https://seriuslink-sockets-production.up.railway.app ...");
 
+
 socket.on("connect", () => {
   console.log("✅ CONNECTED TO RAILWAY SOCKET SERVER SUCCESSFULLY! Socket ID:", socket.id);
   console.log("📡 Listening for live events from production...\n");
