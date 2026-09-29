@@ -10,22 +10,37 @@ require("dotenv").config();
 const ioRedis = require("ioredis");
 let redis;
 
+const redisConfig = {
+    maxRetriesPerRequest: null,
+    retryStrategy(times) {
+        const delay = Math.min(times * 500, 3000);
+        return delay;
+    },
+};
+
 if (process.env.REDIS_URL) {
-    redis = new ioRedis(process.env.REDIS_URL);
+    console.log("Connecting to Redis via REDIS_URL...");
+    redis = new ioRedis(process.env.REDIS_URL, redisConfig);
 } else {
+    const host = process.env.REDIS_HOST || process.env.REDISHOST || "127.0.0.1";
+    const port = parseInt(process.env.REDIS_PORT || process.env.REDISPORT || "6379", 10);
+    const password = process.env.REDIS_PASSWORD || process.env.REDISPASSWORD || undefined;
+
+    console.log(`Connecting to Redis at ${host}:${port}...`);
     redis = new ioRedis({
-        host: process.env.REDIS_HOST || process.env.REDISHOST || "127.0.0.1",
-        port: process.env.REDIS_PORT || process.env.REDISPORT || 6379,
-        password: process.env.REDIS_PASSWORD || process.env.REDISPASSWORD || undefined,
+        host,
+        port,
+        password,
+        ...redisConfig,
     });
 }
 
 redis.on("connect", () => {
-    console.log("Connected to Redis successfully.");
+    console.log("✅ Connected to Redis successfully.");
 });
 
 redis.on("error", (err) => {
-    console.error("Redis connection error:", err);
+    console.error("❌ Redis connection error:", err.message);
 });
 
 redis.subscribe(
@@ -55,5 +70,5 @@ redis.on("message", function (channel, message) {
 const PORT = process.env.PORT || process.env.BROADCAST_PORT || 6002;
 
 server.listen(PORT, () => {
-    console.log(`Socket.IO server running on port ${PORT}`);
+    console.log(`🚀 Socket.IO server running on port ${PORT}`);
 });
